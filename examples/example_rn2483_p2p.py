@@ -6,6 +6,7 @@ from threading import Thread, Lock
 from loranode import RN2483Controller
 from time import sleep
 
+
 class ReceiverThread(Thread):
     def __init__(self, mutex):
         Thread.__init__(self)
@@ -17,9 +18,10 @@ class ReceiverThread(Thread):
         while True:
             r = self.lc.recv_p2p()
 
-            self.mutex.acquire() # Do not let prints occur simultaneously
+            self.mutex.acquire()  # Do not let prints occur simultaneously
             printd(clr(Color.BLUE, "RECV: " + r), Level.INFO)
             self.mutex.release()
+
 
 class TransmitterThread(Thread):
     def __init__(self, mutex):
@@ -40,6 +42,7 @@ class TransmitterThread(Thread):
 
             r = self.lc.send_p2p(data)
             sleep(5)
+
 
 # LoRaController peer-to-peer test, assuming two devices at /dev/ttyUSB0 and
 # /dev/ttyUSB1

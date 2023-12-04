@@ -13,9 +13,9 @@ lc = RN2483Controller(f"/dev/{file}")
 lc.set_freq("868100000")
 lc.set_cr("4/5")
 lc.set_bw("125")
-lc.set_sf("sf7")
+lc.set_sf("sf11")
 lc.set_crc("on")
-lc.set_prlen("6")
+lc.set_prlen("8")
 
 data = "aaaaaa"
 while True:

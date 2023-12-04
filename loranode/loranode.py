@@ -6,7 +6,8 @@ from .commands import *
 from time import sleep
 from threading import Thread
 
-class LoRaController():
+
+class LoRaController:
     def __init__(self, port):
         self.port = port
 
@@ -41,7 +42,7 @@ class LoRaController():
 
 class RN2483Controller(LoRaController):
     def __init__(self, port, baudrate=57600, reset=True):
-        self.device = serial.Serial(port=port, baudrate=baudrate, timeout=5*60)
+        self.device = serial.Serial(port=port, baudrate=baudrate, timeout=5 * 60)
 
         if reset:
             self.reset()
@@ -66,7 +67,7 @@ class RN2483Controller(LoRaController):
 
         if self.device.is_open:
             cmd += "\r\n"
-            self.device.write(cmd.encode('utf-8'))
+            self.device.write(cmd.encode("utf-8"))
 
             return self.serial_r()
         else:
@@ -84,7 +85,7 @@ class RN2483Controller(LoRaController):
         self.serial_sr(CMD_RESET)
 
     def serial_r(self):
-        r = self.device.readline().decode('utf-8').strip()
+        r = self.device.readline().decode("utf-8").strip()
         printd("< " + r, Level.DEBUG)
 
         return r
@@ -128,7 +129,13 @@ class RN2483Controller(LoRaController):
         if r_status == "mac_tx_ok" or r_status == "mac_rx":
             return True
         else:
-            printd("Server did not acknowledge data '" + str(data) + "' on port " + str(port), Level.DEBUG)
+            printd(
+                "Server did not acknowledge data '"
+                + str(data)
+                + "' on port "
+                + str(port),
+                Level.DEBUG,
+            )
             return False
 
     def send_p2p(self, data):
@@ -156,7 +163,7 @@ class RN2483Controller(LoRaController):
     def get_sf(self) -> Literal["sf7", "sf8", "sf9", "sf10", "sf11", "sf12"] | None:
         """Get the string representing of the current spreading factor.
 
-        This command reads back the current spreading factor being used by the transceiver. 
+        This command reads back the current spreading factor being used by the transceiver.
         """
         return self.serial_sr(CMD_GET_SF)
 
@@ -168,7 +175,7 @@ class RN2483Controller(LoRaController):
 
     def get_bw(self) -> Literal["125", "250", "500"] | None:
         """Get the string representing the current value settings used for the radio bandwidth.
-        
+
         This command reads back the current operating radio bandwidth used by the transceiver.
         """
         return self.serial_sr(CMD_GET_BW)
@@ -178,7 +185,7 @@ class RN2483Controller(LoRaController):
         self.serial_sr(CMD_MAC_PAUSE)
         self.serial_sr(CMD_SET_BW, str(bw))
         self.serial_sr(CMD_MAC_RESUME)
-    
+
     def get_crc(self) -> Literal["on", "off"] | None:
         """Get the string representing the status of the CRC header."""
         return self.serial_sr(CMD_GET_CRC)
@@ -213,16 +220,14 @@ class RN2483Controller(LoRaController):
         else:
             return False
 
-    def get_prlen(self, value) -> str | None:
-        """Get the signed decimal representing the preamble length, 
-        
+    def get_prlen(self) -> str | None:
+        """Get the signed decimal representing the preamble length,
+
         This command reads the current preamble length used for communication.
 
         Return values: 6 to 65535 (default: 8).
         """
-        self.serial_sr(CMD_MAC_PAUSE)
-        self.serial_sr(CMD_GET_PRLEN, value)
-        self.serial_sr(CMD_MAC_RESUME)
+        return self.serial_sr(CMD_GET_PRLEN)
 
     def set_prlen(self, prlen: int | str) -> None:
         """
@@ -237,7 +242,7 @@ class RN2483Controller(LoRaController):
         self.serial_sr(CMD_MAC_RESUME)
 
     def get_freq(self) -> str | None:
-        """Get decimal number representing the frequency, 
+        """Get decimal number representing the frequency,
         Return values: from 433050000 to 434790000 or from 863000000 to 870000000 (default: 868100000), in Hz.
         """
         return self.serial_sr(CMD_GET_FREQ)
@@ -254,12 +259,36 @@ class RN2483Controller(LoRaController):
         self.serial_sr(CMD_SET_FREQ, str(freq))
         self.serial_sr(CMD_MAC_RESUME)
 
+    def get_sync(self) -> str | None:
+        """Get the hexadecimal string representing the sync word.
+
+        This command reads back the configured synchronization word used for radio
+        communication. One byte long synchronization word is used for the LoRa modulation while up to eight bytes can be entered for FSK.
+
+        Return values: 1B long hexadecimal characters (default: 34).
+        """
+        return self.serial_sr(CMD_GET_SYNC)
+
+    def set_sync(self, sync: str) -> None:
+        """This command sets the synchronization word for the LoRaWAN communication.
+
+        The configuration of the synchronization word should be in concordance with the Gateway configuration.
+
+        Args:
+            sync: 1B long hexadecimal string representing the sync word.
+        Return values:
+            "ok": if the state is valid
+            "invalid_param": if the state is not valid
+        """
+        self.serial_sr(CMD_MAC_PAUSE)
+        self.serial_sr(CMD_SET_SYNC, sync)
+        self.serial_sr(CMD_MAC_RESUME)
 
     # TODO: Should be a serial send instead of send/receive. The OK
     # is received after the sleep duration
     def sleep(self, ms):
         self.serial_sr(CMD_SLEEP, str(ms))
-        sleep(ms/1000)
+        sleep(ms / 1000)
 
     def eval(self, command):
         return self.serial_sr(command)
@@ -288,7 +317,7 @@ class AsyncSerialReader(Thread):
 
 class E32Controller(RN2483Controller):
     def __init__(self, port, baudrate=57600, rx_callback=None):
-        self.device = serial.Serial(port=port, baudrate=baudrate, timeout=5*60)
+        self.device = serial.Serial(port=port, baudrate=baudrate, timeout=5 * 60)
         self.device.write(b"reset\r")
         self.rx_callback = rx_callback
         if rx_callback is None:
@@ -313,10 +342,13 @@ class E32Controller(RN2483Controller):
         cmd = cmd.encode("utf-8")
         from time import sleep
 
-        sleep(1.0)  # TODO fix. Wait a bit before sending so we don't send when a previous command is still executing. Fix by checking for each echoed character.
+        sleep(
+            1.0
+        )  # TODO fix. Wait a bit before sending so we don't send when a previous command is still executing. Fix by checking for each echoed character.
         for character in cmd:
             self.device.write([character])
         printd("> " + cmd.decode("utf-8"), Level.DEBUG)
+
 
 # Requires latest LoPy firmware.
 # To upgrade: connect pins G23 and GND, press reset and run lopyupdate.py script.
@@ -325,7 +357,7 @@ class E32Controller(RN2483Controller):
 # https://github.com/micropython/micropython/blob/master/tools/pyboard.py
 class LoPyController(LoRaController):
     def __init__(self, port, baudrate=115200, reset=True):
-        self.device = serial.Serial(port=port, baudrate=baudrate, timeout=5*60)
+        self.device = serial.Serial(port=port, baudrate=baudrate, timeout=5 * 60)
         self.commands_sent = 0
         self.cr = "CODING_4_8"
         self.preamble = 8
@@ -363,21 +395,26 @@ class LoPyController(LoRaController):
         self.serial_s("import binascii")
         self.serial_s("from network import LoRa")
         self.serial_s("pycom.heartbeat(False)")
-        self.serial_s("lora = LoRa(mode=LoRa.LORA, frequency=%d, tx_power=%d, bandwidth=LoRa.%s, sf=%d, preamble=%d, coding_rate=LoRa.%s, power_mode=LoRa.ALWAYS_ON, tx_iq=False, rx_iq=False, adr=False, public=True, tx_retries=1)" % (self.freq, self.pwr, self.bw, self.sf, self.preamble, self.cr))
+        self.serial_s(
+            "lora = LoRa(mode=LoRa.LORA, frequency=%d, tx_power=%d, bandwidth=LoRa.%s, sf=%d, preamble=%d, coding_rate=LoRa.%s, power_mode=LoRa.ALWAYS_ON, tx_iq=False, rx_iq=False, adr=False, public=True, tx_retries=1)"
+            % (self.freq, self.pwr, self.bw, self.sf, self.preamble, self.cr)
+        )
         self.serial_s("s = socket.socket(socket.AF_LORA, socket.SOCK_RAW)")
         self.serial_s("s.setblocking(True)")
 
-        self.serial_s("lora.callback(trigger=LoRa.TX_PACKET_EVENT,handler=lambda x: x)")  # Hack to wait for completion of tx
+        self.serial_s(
+            "lora.callback(trigger=LoRa.TX_PACKET_EVENT,handler=lambda x: x)"
+        )  # Hack to wait for completion of tx
 
     def serial_r(self):
-        r = self.device.readline().decode('utf-8').strip()
+        r = self.device.readline().decode("utf-8").strip()
         printd(r, Level.DEBUG)
 
         return r
 
     def serial_s(self, cmd):
         cmd += "\r\n"
-        self.device.write(cmd.encode('utf-8'))
+        self.device.write(cmd.encode("utf-8"))
         sleep(0.05)
         self.commands_sent += 1
         if self.commands_sent >= 512:  # Workaround for very weird bug
@@ -395,7 +432,7 @@ class LoPyController(LoRaController):
 
     def send_p2p(self, data, wait=True):
         self.serial_s("pycom.rgbled(0x00ffff)")
-        self.serial_s("s.send(binascii.unhexlify(\"" + data + "\"))")
+        self.serial_s('s.send(binascii.unhexlify("' + data + '"))')
         if wait:
             line = self.serial_r()
             while line != str(int(len(data) / 2)):

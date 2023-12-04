@@ -4,7 +4,6 @@ from time import sleep
 from threading import Thread
 
 
-
 class Level:
     CRITICAL = 0
     WARNING = 1
@@ -12,17 +11,18 @@ class Level:
     DEBUG = 3
     BLOAT = 4
 
+
 VERBOSITY = Level.DEBUG
 
 
 class Color:
-    GREY = '\x1b[1;37m'
-    GREEN = '\x1b[1;32m'
-    BLUE = '\x1b[1;34m'
-    YELLOW = '\x1b[1;33m'
-    RED = '\x1b[1;31m'
-    MAGENTA = '\x1b[1;35m'
-    CYAN = '\x1b[1;36m'
+    GREY = "\x1b[1;37m"
+    GREEN = "\x1b[1;32m"
+    BLUE = "\x1b[1;34m"
+    YELLOW = "\x1b[1;33m"
+    RED = "\x1b[1;31m"
+    MAGENTA = "\x1b[1;35m"
+    CYAN = "\x1b[1;36m"
 
 
 class IntervalTimer(Thread):
@@ -41,7 +41,7 @@ class IntervalTimer(Thread):
 
 
 def clr(color, text):
-    return color + str(text) + '\x1b[0m'
+    return color + str(text) + "\x1b[0m"
 
 
 def check_root():
@@ -51,17 +51,17 @@ def check_root():
 
 
 def set_ip_address(dev, ip):
-    if subprocess.call(['ip', 'addr', 'add', ip, 'dev', dev]):
+    if subprocess.call(["ip", "addr", "add", ip, "dev", dev]):
         printd("Failed to assign IP address %s to %s." % (ip, dev), Level.CRITICAL)
 
-    if subprocess.call(['ip', 'link', 'set', 'dev', dev, 'up']):
+    if subprocess.call(["ip", "link", "set", "dev", dev, "up"]):
         printd("Failed to bring device %s up." % dev, Level.CRITICAL)
 
 
 def printd(string, level, no_end=False):
     if VERBOSITY >= level:
         if no_end:
-            print(string, end='')
+            print(string, end="")
         else:
             print(string)
 
@@ -73,11 +73,11 @@ def hex_offset_to_string(byte_array):
 
 
 def mac_to_bytes(mac):
-    return ''.join(chr(int(x, 16)) for x in mac.split(':'))
+    return "".join(chr(int(x, 16)) for x in mac.split(":"))
 
 
 def bytes_to_mac(byte_array):
-    return ':'.join("{:02x}".format(ord(byte)) for byte in byte_array)
+    return ":".join("{:02x}".format(ord(byte)) for byte in byte_array)
 
 
 def set_debug_level(lvl):

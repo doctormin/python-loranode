@@ -10,15 +10,18 @@ if __name__ == "__main__":
 
     # Parse config
     cp = configparser.ConfigParser()
-    cp.read('lora.cfg')
-    config = cp['DEFAULT']
+    cp.read("lora.cfg")
+    config = cp["DEFAULT"]
 
     # Test controller
     lc = RN2483Controller(config.get("port"))
     if lc.test():
         printd("[+] Connected to LoRa RN2483 device", Level.INFO)
     else:
-        printd(clr(Color.YELLOW, "[-] Failed to get version from LoRa device"), Level.WARNING)
+        printd(
+            clr(Color.YELLOW, "[-] Failed to get version from LoRa device"),
+            Level.WARNING,
+        )
 
     # Join and send a message
     if lc.join_abp(config.get("nwkskey"), config.get("appskey"), config.get("devaddr")):
