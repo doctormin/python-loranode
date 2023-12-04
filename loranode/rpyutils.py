@@ -4,6 +4,7 @@ from time import sleep
 from threading import Thread
 
 
+
 class Level:
     CRITICAL = 0
     WARNING = 1

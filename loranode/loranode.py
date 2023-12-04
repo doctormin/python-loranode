@@ -1,3 +1,4 @@
+from typing import Literal
 import serial
 import binascii
 from .rpyutils import printd, Level, Color, clr
@@ -149,48 +150,62 @@ class RN2483Controller(LoRaController):
 
         return data
 
-    def set_pwridx(self, pwridx):
+    def set_pwridx(self, pwridx) -> None:
         self.serial_sr(CMD_SET_PWRIDX, str(pwridx))
 
-    def set_pwr(self, pwr):
+    def get_sf(self) -> Literal["sf7", "sf8", "sf9", "sf10", "sf11", "sf12"] | None:
+        """Get the string representing of the current spreading factor.
+
+        This command reads back the current spreading factor being used by the transceiver. 
+        """
+        return self.serial_sr(CMD_GET_SF)
+
+    def set_sf(self, sf: Literal["sf7", "sf8", "sf9", "sf10", "sf11", "sf12"]) -> None:
+        """Set the spreading factor."""
         self.serial_sr(CMD_MAC_PAUSE)
-        self.serial_sr(CMD_SET_PWR, str(pwr))
+        self.serial_sr(CMD_SET_SF, str(sf))
         self.serial_sr(CMD_MAC_RESUME)
 
-    def set_sf(self, sf):
-        self.serial_sr(CMD_MAC_PAUSE)
-        self.serial_sr(CMD_SET_SF, "sf"+str(sf))
-        self.serial_sr(CMD_MAC_RESUME)
+    def get_bw(self) -> Literal["125", "250", "500"] | None:
+        """Get the string representing the current value settings used for the radio bandwidth.
+        
+        This command reads back the current operating radio bandwidth used by the transceiver.
+        """
+        return self.serial_sr(CMD_GET_BW)
 
-    def set_bw(self, bw):
+    def set_bw(self, bw: Literal["125", "250", "500"]) -> None:
+        """Set the radio bandwidth."""
         self.serial_sr(CMD_MAC_PAUSE)
         self.serial_sr(CMD_SET_BW, str(bw))
         self.serial_sr(CMD_MAC_RESUME)
+    
+    def get_crc(self) -> Literal["on", "off"] | None:
+        """Get the string representing the status of the CRC header."""
+        return self.serial_sr(CMD_GET_CRC)
 
-    def set_cr(self, cr):
-        self.serial_sr(CMD_MAC_PAUSE)
-        self.serial_sr(CMD_SET_CR, cr)
-        self.serial_sr(CMD_MAC_RESUME)
-
-    def set_crc(self, crc):
+    def set_crc(self, crc: Literal["on", "off"]) -> None:
+        """Set whether the CRC header is enabled or disabled."""
         self.serial_sr(CMD_MAC_PAUSE)
         self.serial_sr(CMD_SET_CRC, crc)
         self.serial_sr(CMD_MAC_RESUME)
 
-    def get_pwr(self):
+    def get_pwr(self) -> str | None:
         return self.serial_sr(CMD_GET_PWR)
 
-    def get_sf(self):
-        return self.serial_sr(CMD_GET_SF)
+    def set_pwr(self, pwr) -> None:
+        self.serial_sr(CMD_MAC_PAUSE)
+        self.serial_sr(CMD_SET_PWR, str(pwr))
+        self.serial_sr(CMD_MAC_RESUME)
 
-    def get_bw(self):
-        return self.serial_sr(CMD_GET_BW)
-
-    def get_cr(self):
+    def get_cr(self) -> Literal["4/5", "4/6", "4/7", "4/8"] | None:
+        """Get the string representing the current value settings used for the coding rate."""
         return self.serial_sr(CMD_GET_CR)
 
-    def get_crc(self):
-        raise NotImplementedError
+    def set_cr(self, cr: Literal["4/5", "4/6", "4/7", "4/8"]) -> None:
+        """Set the coding rate."""
+        self.serial_sr(CMD_MAC_PAUSE)
+        self.serial_sr(CMD_SET_CR, cr)
+        self.serial_sr(CMD_MAC_RESUME)
 
     def set_adr(self, value):
         if self.serial_sr(CMD_SET_ADR, "on" if value else "off"):
@@ -198,18 +213,47 @@ class RN2483Controller(LoRaController):
         else:
             return False
 
-    def set_prlen(self, value):
+    def get_prlen(self, value) -> str | None:
+        """Get the signed decimal representing the preamble length, 
+        
+        This command reads the current preamble length used for communication.
+
+        Return values: 6 to 65535 (default: 8).
+        """
         self.serial_sr(CMD_MAC_PAUSE)
-        self.serial_sr(CMD_SET_PRLEN, value)
+        self.serial_sr(CMD_GET_PRLEN, value)
         self.serial_sr(CMD_MAC_RESUME)
 
-    def get_freq(self):
+    def set_prlen(self, prlen: int | str) -> None:
+        """
+        Args:
+            prlen: decimal number representing the preamble length, from 0 to 65535.
+        Return values:
+            "ok": if the state is valid
+            "invalid_param": if the state is not valid
+        """
+        self.serial_sr(CMD_MAC_PAUSE)
+        self.serial_sr(CMD_SET_PRLEN, str(prlen))
+        self.serial_sr(CMD_MAC_RESUME)
+
+    def get_freq(self) -> str | None:
+        """Get decimal number representing the frequency, 
+        Return values: from 433050000 to 434790000 or from 863000000 to 870000000 (default: 868100000), in Hz.
+        """
         return self.serial_sr(CMD_GET_FREQ)
 
-    def set_freq(self, freq):
+    def set_freq(self, freq: int | str) -> None:
+        """
+        Args:
+            freq: decimal representing the frequency, from 433050000 to 434790000 or from 863000000 to 870000000, in Hz.
+        Return values:
+            "ok": if the state is valid
+            "invalid_param": if the state is not valid
+        """
         self.serial_sr(CMD_MAC_PAUSE)
         self.serial_sr(CMD_SET_FREQ, str(freq))
         self.serial_sr(CMD_MAC_RESUME)
+
 
     # TODO: Should be a serial send instead of send/receive. The OK
     # is received after the sleep duration

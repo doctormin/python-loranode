@@ -4,3 +4,4 @@ samples/
 __pycache__
 dist/
 loranode.egg-info/
+.DS_Store
